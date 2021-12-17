@@ -1,12 +1,15 @@
-use std::net::TcpListener;
+use std::time::Duration;
+
+use letmein_server::ServerConfig;
 
 #[actix_rt::test]
 async fn health_check_test() -> anyhow::Result<()> {
-    let service_address = spawn_server().await?;
+    let service_address = spawn_server()?;
     let client = reqwest::Client::new();
 
     let response = client
         .get(&format!("{}/pulse", service_address))
+        .timeout(Duration::from_secs(2))
         .send()
         .await?;
 
@@ -16,14 +19,28 @@ async fn health_check_test() -> anyhow::Result<()> {
     Ok(())
 }
 
-async fn spawn_server() -> anyhow::Result<String> {
-    let listener = TcpListener::bind("127.0.0.1:0")?;
+#[actix_rt::test]
+async fn not_found_test() -> anyhow::Result<()> {
+    let service_address = spawn_server()?;
+    let client = reqwest::Client::new();
 
-    let service_address = format!("http://127.0.0.1:{}", listener.local_addr()?.port());
+    let response = client
+        .get(&format!("{}", service_address))
+        .timeout(Duration::from_secs(2))
+        .send()
+        .await?;
 
-    let server = letmein::init_service(listener);
-    //let _server = server.await?;
-    let _ = tokio::spawn(async { server.await.unwrap().await });
+    assert_eq!(response.status(), reqwest::StatusCode::NOT_FOUND);
+    assert_eq!(Some(0), response.content_length());
+
+    Ok(())
+}
+
+fn spawn_server() -> anyhow::Result<String> {
+    let settings = ServerConfig::load(&mut config::Config::default())?;
+    let service_address = format!("http://{}:{}", settings.host(), settings.port());
+
+    let _ = tokio::spawn(letmein_server::init_service(settings)?);
 
     Ok(service_address)
 }
