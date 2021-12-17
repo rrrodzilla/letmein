@@ -22,7 +22,7 @@ impl ServerConfig {
     pub fn load(config: &mut Config) -> Result<Self, ServerConfigError> {
         let settings = config;
         settings
-            .merge(config::File::with_name("letmein"))?
+            .merge(config::File::with_name("letmein.toml"))?
             .merge(config::Environment::with_prefix("LETMEIN_SERVER"))?;
 
         let env: String = settings.get("env")?;

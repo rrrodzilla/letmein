@@ -30,3 +30,11 @@ actix-rt = "2.5.0"
 anyhow = "1.0.51"
 reqwest = "0.11.7"
 tokio = { version = "1.15.0", features = ["full"] }
+
+[profile.release]
+opt-level = "z" 
+lto = true
+codegen-units = 1
+panic = "abort"
+
+
