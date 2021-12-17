@@ -4,6 +4,7 @@ use letmein_server::ServerConfig;
 pub async fn main() -> Result<(), letmein_server::LetMeInServerError> {
     let settings = ServerConfig::load(&mut config::Config::default())?;
 
+    eprintln!("Ready and listening on port {}", settings.port());
     letmein_server::init_service(settings)?.await?;
 
     Ok(())

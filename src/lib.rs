@@ -1,7 +1,7 @@
 mod server_config;
 pub use server_config::{ServerConfig, ServerConfigError};
 
-use actix_web::{dev::Server, web, App, HttpResponse, HttpServer};
+use actix_web::{dev::Server, middleware, web, App, HttpResponse, HttpServer};
 use std::sync::Once;
 use thiserror::Error;
 use tracing::{
@@ -54,6 +54,7 @@ pub fn init_service(settings: ServerConfig) -> Result<Server, LetMeInServerError
     //set up and return server
     let server = HttpServer::new(|| {
         App::new()
+            .wrap(middleware::Compress::default())
             .wrap(TracingLogger::default())
             .configure(config_web_app)
     })
